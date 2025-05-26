@@ -1,3 +1,52 @@
+async function applyTheme() {
+  try {
+    const { colors = {}, properties = {} } = await browser.theme.getCurrent();
+
+    // Mappings: theme.colors → CSS-Variablen
+    const map = {
+      toolbar:          '--bg-toolbar',
+      frame_inactive:   '--bg-toolbar-inactive',
+      toolbar_text:     '--text-toolbar',
+      sidebar_text:     '--text-sidebar',
+      popup:            '--bg-popup',
+      popup_border:     '--border-popup',
+      popup_highlight:  '--highlight-popup',
+      popup_text:       '--text-popup',
+      button:           '--button-bg',
+      button_hover:     '--button-hover',
+      button_active:    '--button-active',
+      button_primary:   '--button-primary',
+      button_primary_hover: '--button-primary-hover',
+      button_primary_active: '--button-primary-active',
+      button_primary_color: '--button-primary-text',
+      input_background: '--input-bg',
+      input_color:      '--input-text',
+    };
+
+    for (const [key, varName] of Object.entries(map)) {
+      if (colors[key]) {
+        document.documentElement.style.setProperty(varName, colors[key]);
+      }
+    }
+
+    // Optional: System-Font aus properties übernehmen
+    if (properties.color_scheme === 'dark') {
+      document.documentElement.style.setProperty('--ui-font', 'menu');
+    }
+  }
+  catch (e) {
+    console.warn('Theme konnte nicht gelesen werden:', e);
+  }
+}
+
+// Initial anwenden
+applyTheme();
+
+// Auf Theme-Änderungen reagieren
+browser.theme.onUpdated.addListener(applyTheme);
+
+
+
 class WorkspaceUI {
   constructor() {
     this.workspaces = [];
@@ -27,9 +76,7 @@ class WorkspaceUI {
     document.getElementById("createNewWsp").addEventListener("click", async (e) => {
       const windowId = (await browser.windows.getCurrent()).id;
       const wspId = Date.now();
-
-      createNewWsp
-      var wspName = await this._callBackgroundTask("getWorkspaceName");
+      const wspName = await this._callBackgroundTask("getWorkspaceName");
 
       const wsp = {
         id: wspId,
@@ -84,12 +131,6 @@ class WorkspaceUI {
 
     li.dataset.wspId = workspace.id;
 
-    const radioBox = document.createElement("input");
-    radioBox.type = "radio";
-    radioBox.id = `radio-${workspace.id}-id`;
-    radioBox.checked = workspace.active;
-    li.appendChild(radioBox);
-
     const span1 = document.createElement("span");
     span1.spellcheck = false;
     span1.textContent = workspace.name;
@@ -97,7 +138,7 @@ class WorkspaceUI {
 
     const span2 = document.createElement("span");
     span2.classList.add("tabs-qty");
-    span2.textContent = workspace.tabs.length;
+    span2.textContent = "(" + workspace.tabs.length + " tabs)";
     li.appendChild(span2);
 
     const deleteBtn = document.createElement("a");
@@ -113,16 +154,12 @@ class WorkspaceUI {
     li.dataset.originalText = span1.textContent;
 
     // select a workspace
-    radioBox.addEventListener("click", async (e) => {
+    li.addEventListener("click", async (e) => {
       const lis = document.getElementsByTagName("li");
 
       // uncheck other boxes
       for (let i = 0; i < lis.length; i++) {
-        const firstChild = lis[i].firstElementChild;
-        if (firstChild.id != radioBox.id && firstChild.checked) {
-          firstChild.checked = false;
-          firstChild.parentElement.classList.remove("active");
-        }
+        lis[i].classList.remove("active");
       }
 
       li.classList.add("active");
@@ -179,6 +216,7 @@ class WorkspaceUI {
 
     // rename a workspace by clicking on the rename button
     renameBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       // make it editable
       span1.contentEditable = true;
 
@@ -225,6 +263,7 @@ class WorkspaceUI {
 
     // delete a workspace
     deleteBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
       // const deleteConfirmed = confirm(`Are you sure you want to delete ${workspace.name}?`);
       const deleteConfirmed = await this._promisfyConfirm(`Are you sure you want to delete ${workspace.name}?`);
 

@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "description": "A workspace manager. Nothing more, nothing less.",
   "icons": {
-    "48": "icons/wsp-48.png",
-    "96": "icons/wsp-96.png"
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png"
   },
   "permissions": [
     "tabs",
@@ -17,12 +17,15 @@
   "browser_action": {
     "browser_style": true,
     "default_icon": {
-      "16": "icons/wsp-16.png",
-      "32": "icons/wsp-32.png",
-      "64": "icons/wsp-64.png"
+      "64": "icons/dark64.png"
     },
     "default_title": "Workspaces",
-    "default_popup": "popup/wsp.html"
+    "default_popup": "popup/wsp.html",
+    "theme_icons": [{
+      "light": "icons/light64.png",
+      "dark": "icons/dark64.png",
+      "size": 64
+    }]
   },
   "background": {
     "scripts": [

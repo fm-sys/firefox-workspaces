@@ -1,208 +1,222 @@
-/* General Rules and Resets */
-* {
-  font-size: inherit;
-  margin-block-end: 0;
-  margin-block-start: 0;
-  margin-inline-end: 0;
-  margin-inline-start: 0;
-  padding-block-end: 0;
-  padding-block-start: 0;
-  padding-inline-end: 0;
-  padding-inline-start: 0;
+/* ============================= */
+/* 1. CSS-Variablen (Theme-Farben)
+/* ============================= */
+:root {
+    /* Toolbar / Hintergrund */
+    --bg-toolbar: #fefefe; /* Fallback hell */
+    --bg-toolbar-inactive: #ebebeb;
+    /* Textfarben */
+    --text-toolbar: #000000;
+    --text-sidebar: #000000;
+    /* Popup / Panels */
+    --bg-popup: #ffffff;
+    --border-popup: rgba(0, 0, 0, 0.1);
+    --highlight-popup: #e0e0e0;
+    --text-popup: #000000;
+    /* Buttons */
+    --button-bg: rgba(0, 0, 0, 0.1);
+    --button-hover: rgba(0, 0, 0, 0.2);
+    --button-active: rgba(0, 0, 0, 0.3);
+    --button-primary: #0060df;
+    --button-primary-hover: #1e78ff;
+    --button-primary-active: #559cff;
+    --button-primary-text: #ffffff;
+    /* Inputs */
+    --input-bg: #ffffff;
+    --input-text: #000000;
+    /* System font */
+    --ui-font: menu;
 }
 
-html {
-  background-color: #fefefe;
-  box-sizing: border-box;
-  font-size: 12px;
-}
-
-body {
-  font-family: Roboto, Noto, "San Francisco", Ubuntu, "Segoe UI", "Fira Sans", message-box, Arial, sans-serif;
-  /* font-family: "Lucida Console", "Courier New", monospace; */
-  inline-size: 300px;
-  max-inline-size: 300px;
-}
-
-@media (min-resolution: 1dppx) {
-  html {
-    font-size: 14px;
-  }
-}
-
+/* ============================= */
+/* 2. Base-Reset
+/* ============================= */
 *,
 *::before,
 *::after {
-  box-sizing: inherit;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
 }
 
-/* .hide{
-  display:none !important;
-} */
-
-form {
-  margin-block-end: 0;
-  margin-block-start: 0;
-  margin-inline-end: 0;
-  margin-inline-start: 0;
+html {
+    font-size: 12px;
+    background-color: var(--bg-popup);
 }
 
-table {
-  border: 0;
-  border-spacing: 0;
-  inline-size: 100%;
-  margin-block-end: 0;
-  margin-block-start: 0;
-  margin-inline-end: 0;
-  margin-inline-start: 0;
+@media (min-resolution: 1dppx) {
+    html {
+        font-size: 14px;
+    }
 }
 
+body {
+    font-family: Roboto, Noto, "San Francisco", Ubuntu, "Segoe UI", "Fira Sans", var(--ui-font), Arial, sans-serif;
+    inline-size: 300px;
+    max-inline-size: 300px;
+    background-color: var(--bg-toolbar);
+    color: var(--text-toolbar);
+}
+
+/* ============================= */
+/* 3. Container & Titel
+/* ============================= */
 .container {
-  border-radius: 4px;
-  /* overflow: hidden; */
-  box-shadow: 0 15px 30px rgba(0,0,0,.15);
-  overflow-x: auto;
-  overflow-y: scroll;
+    border-radius: 4px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, .15);
+    overflow-x: auto;
+    overflow-y: scroll;
+    background-color: var(--bg-popup);
 }
 
 .title {
-  font-size: 1.2em;
-  padding: 15px 20px;
-  color: white;
-  background-color: #8BC6EC;
-  background-image: linear-gradient(135deg, #9599E2 0%, #8BC6EC 100%);
-  font-weight: 500;
-  letter-spacing: .5px;
-  border-bottom: 1px solid rgba(255,255,255,.2);
-  text-align: center;
+    font-size: 1.2em;
+    padding: 15px 20px;
+    background-color: var(--bg-toolbar);
+    color: var(--text-toolbar);
+    font-weight: 500;
+    letter-spacing: .5px;
+    border-bottom: 1px solid var(--border-popup);
+    text-align: center;
 }
 
+/* ============================= */
+/* 4. Listen & List-Items
+/* ============================= */
 ul {
-  list-style: none;
-  min-height: 250px;
-  background: #eaecf5;
-  overflow: hidden;
-  padding: 0 0 15px;
+    list-style: none;
+    min-height: 250px;
+    background: var(--bg-popup);
+    overflow: hidden;
+    padding-bottom: 15px;
 }
 
 li.wsp-list-item {
-  background: white;
-  box-shadow: 0 5px 10px rgba(0,0,0,.1);
-  margin: 15px 20px 0 10px;
-  padding: 10px;
-  width: calc(100% - 30px);
-  /* cursor: pointer; */
-  border-radius: 4px;
-  transition: all .7s cubic-bezier(0.770, 0.000, 0.175, 1.000);
-  font-size: .8em;
-  position: relative;
-  z-index: 1;
+    background-color: var(--button-bg);
+    margin: 10px 0 0 10px;
+    padding: 11px;
+    width: calc(100% - 20px);
+    border-radius: 4px;
+    transition: all .3s ease-out;
+    font-size: .8em;
+    position: relative;
+    color: var(--text-popup);
 }
 
-li.wsp-list-item.active::after {
-  content: ' – current';
-  color: rgba(0, 0, 0, 0.438);
+li.wsp-list-item:hover {
+    background-color: var(--button-hover);
 }
+
+li.wsp-list-item.active {
+    background-color: var(--button-active);
+}
+
+/*li.wsp-list-item.active::after {
+    content: ' – current';
+    color: var(--text-popup);
+}*/
 
 li.wsp-list-item .tabs-qty {
-  /* position: absolute;
-  display: inline-block;
-  text-align: center;
-  top: 0;
-  left: 0;
-  background-color: #FF9A8B;
-  background-image: linear-gradient(90deg, #FF9A8B 0%, #FF6A88 100%);    
-  border-radius: 10px;
-  color: white;
-  font-weight: bold;
-  font-size: .875em;
-  min-width: 18px;
-  padding: 3px 4px;
-  top: -5px;
-  right: -5px;
-  bottom: auto;
-  left: auto;
-  z-index: 2;  */
-  position: absolute;
-  display: inline-block;
-  text-align: center;
-  top: 0;
-  left: 0;
-  background-color: blue;
-  background-image: linear-gradient(90deg, #938bff 0%, #6a74ff 100%);    
-  border-radius: 10px;
-  color: white;
-  font-weight: bold;
-  font-size: .875em;
-  min-width: 18px;
-  padding: 3px 4px;
-  /* bottom: -5px;
-  left: auto;
-  top: auto;
-  right: -5px; */
-  top: -5px;
-  right: -5px;
-  bottom: auto;
-  left: auto;
-  z-index: 2;
+    /*background: var(--button-primary);*/
+    /*border-radius: 10px;*/
+    /*color: var(--button-primary-text);*/
+    font-weight: bold;
+    font-size: .875em;
+    min-width: 15px;
+    padding: 0 5px;
 }
 
+/* ============================= */
+/* 5. Buttons (Rename/Delete)
+/* ============================= */
 li.wsp-list-item a.edit-btn {
-  position: absolute;
-  top: 8px;
-  height: 16px;
-  width: 16px;
+    position: absolute;
+    top: 8px;
+    height: 16px;
+    width: 16px;
 }
 
 li.wsp-list-item a.rename-btn {
-  right: 40px;
-  background: url("../img/rename.svg");
+    right: 35px;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    background-color: var(--text-popup);
+    mask-image: url("../img/rename.svg");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
 }
 
 li.wsp-list-item a.delete-btn {
-  right: 20px;
-  background: url("../img/delete.svg");
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    background-color: var(--text-popup);
+    mask-image: url("../img/delete.svg");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
 }
 
-.footer-container {
-  background-color: #0093E9;
-  background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);
-}
+/* ============================= */
+/* 6. Footer
+/* ============================= */
 
 .footer {
-  display: inline-block;
-  vertical-align: top;
-  padding: 5px 20px;
-  background: transparent;
-  color: white;
-  font-weight: 600;
-  font-size: .8em;
-  text-decoration: none;
-  text-transform: uppercase;
-  line-height: 30px;
-  letter-spacing: 1px;
+    display: inline-block;
+    padding: 5px 20px;
+    color: var(--button-primary-text);
+    font-weight: 600;
+    font-size: .8em;
+    text-decoration: none;
+    line-height: 20px;
+    letter-spacing: 1px;
+    background: transparent;
 }
 
-.footer:hover{
-  background: rgba(0,0,0,.15);
+.footer:hover {
+    background: var(--button-hover);
 }
 
 .footer.full-width {
-  width: 100%;
+    width: 100%;
 }
 
 .footer#createNewWsp {
-  width: 40px;
-  height: 40px;
-  padding:0;
-  background-image: url("../img/add.svg");
-  background-size: 16px;
-  background-repeat: no-repeat;
-  background-position: center;
+    display: block;
+    width: calc(100% - 20px); /* Account for horizontal margins */
+    margin: 10px auto;
+    padding: 6px 12px;
+    background-color: var(--button-primary);
+    color: var(--button-primary-text);
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.footer#createNewWsp:hover {
+    background-color: var(--button-primary-hover);
 }
 
 
+/* ============================= */
+/* 7. Form & Table Reset
+/* ============================= */
+form, table {
+    margin: 0;
+    border: 0;
+    border-spacing: 0;
+    width: 100%;
+}
+
 [contenteditable] {
-  outline: 0px solid transparent;
-  overflow-wrap: break-word;
+    outline: none;
+    overflow-wrap: break-word;
 }
