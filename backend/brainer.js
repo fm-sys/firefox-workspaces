@@ -57,10 +57,8 @@ class Brainer {
 
     // when a window is closed, delete workspaces data associated to this window
     browser.windows.onRemoved.addListener(async (windowId) => {
-      // read setting value (fallback to false if no setting)
-      const shouldRememberWorkspaces = await WSPStorageManger.readOption('rememberWorkspaces') || false;
-      // delete if preference to remember workspaces is not enabled
-      if (!shouldRememberWorkspaces) await WSPStorageManger.destroyWindow(windowId);
+      // todo check if tabs are restored or not and maybe destroy old session data
+      //if (!shouldRememberWorkspaces) await WSPStorageManger.destroyWindow(windowId);
     });
 
     browser.windows.onFocusChanged.addListener(async (windowId) => {
@@ -211,7 +209,7 @@ class Brainer {
   }
 
   static generateWspName() {
-    return Util.generateWspName(6);
+    return 'Unnamed Workspace';
   }
 
   static async refreshTabMenu() {

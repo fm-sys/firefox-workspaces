@@ -101,10 +101,4 @@ class WSPStorageManger {
     await browser.storage.local.set({ [key]: false });
   }
 
-  static async readOption(optionKey) {
-    const key = `ld-option-${optionKey}`;
-    const results = await browser.storage.local.get(key);
-    // console.log('readOption \'' + key + '\':', results[key]);
-    return results[key] || null;
-  }
 }

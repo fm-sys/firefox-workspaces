@@ -27,7 +27,9 @@ class WorkspaceUI {
     document.getElementById("createNewWsp").addEventListener("click", async (e) => {
       const windowId = (await browser.windows.getCurrent()).id;
       const wspId = Date.now();
-      const wspName = await this._callBackgroundTask("getWorkspaceName");
+
+      createNewWsp
+      var wspName = await this._callBackgroundTask("getWorkspaceName");
 
       const wsp = {
         id: wspId,
@@ -66,29 +68,12 @@ class WorkspaceUI {
       }
     });
 
-    // open extensions option page on settings icon click
-    document.getElementById("openOptionsPage").addEventListener("click", () => {
-      browser.runtime.openOptionsPage();
-    });
-
   }
 
   async _callBackgroundTask(action, args) {
     const message = { action, ...args };
 
     return browser ? await browser.runtime.sendMessage(message) : null;
-  }
-
-  _isValidWorkspaceName(wspName) {
-    const lis = document.getElementsByTagName("li");
-
-    for (let i = 0; i < lis.length; i++) {
-      if (lis[i].dataset.originalText === wspName) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   _createListItemAndRegisterListeners(workspace) {
@@ -146,7 +131,7 @@ class WorkspaceUI {
       await this._callBackgroundTask("activateWorkspace", { wspId: workspace.id, windowId: workspace.windowId });
     });
 
-    // rename a workspace by double clicking
+    // rename a workspace by double-clicking
     li.addEventListener("dblclick", (e) => {
       // make it editable
       span1.contentEditable = true;
@@ -166,14 +151,6 @@ class WorkspaceUI {
           
           if (span1.textContent.length > 0 && span1.textContent !== li.dataset.originalText) {
             const wspName = span1.textContent;
-
-            if (!this._isValidWorkspaceName(wspName)) {
-              // alert(`${wspName} already exists!!! Please choose another name!!!`);
-              Fnon.Alert.Warning(`${wspName} already exists!!! Please choose another name!!!`, "Warning", "OK");
-              span1.textContent = li.dataset.originalText;
-              return;
-            }
-
             const wspId = li.dataset.wspId;
             li.dataset.originalText = wspName;
             // rename a workspace
@@ -190,14 +167,6 @@ class WorkspaceUI {
       span1.addEventListener("blur", async (e) => {
         if (span1.textContent.length > 0 && span1.textContent !== li.dataset.originalText) {
           const wspName = span1.textContent;
-
-          if (!this._isValidWorkspaceName(wspName)) {
-            // alert(`${wspName} already exists!!! Please choose another name!!!`);
-            Fnon.Alert.Warning(`${wspName} already exists!!! Please choose another name!!!`, "Warning", "OK");
-            span1.textContent = li.dataset.originalText;
-            return;
-          }
-
           const wspId = li.dataset.wspId;
           li.dataset.originalText = wspName;
           // rename a workspace
@@ -228,14 +197,6 @@ class WorkspaceUI {
           
           if (span1.textContent.length > 0 && span1.textContent !== li.dataset.originalText) {
             const wspName = span1.textContent;
-
-            if (!this._isValidWorkspaceName(wspName)) {
-              // alert(`${wspName} already exists!!! Please choose another name!!!`);
-              Fnon.Alert.Warning(`${wspName} already exists!!! Please choose another name!!!`, "Warning", "OK");
-              span1.textContent = li.dataset.originalText;
-              return;
-            }
-
             const wspId = li.dataset.wspId;
             li.dataset.originalText = wspName;
             // rename a workspace
@@ -252,14 +213,6 @@ class WorkspaceUI {
       span1.addEventListener("blur", async (e) => {
         if (span1.textContent.length > 0 && span1.textContent !== li.dataset.originalText) {
           const wspName = span1.textContent;
-
-          if (!this._isValidWorkspaceName(wspName)) {
-            // alert(`${wspName} already exists!!! Please choose another name!!!`);
-            Fnon.Alert.Warning(`${wspName} already exists!!! Please choose another name!!!`, "Warning", "OK");
-            span1.textContent = li.dataset.originalText;
-            return;
-          }
-
           const wspId = li.dataset.wspId;
           li.dataset.originalText = wspName;
           // rename a workspace

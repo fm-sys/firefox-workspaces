@@ -167,13 +167,11 @@ li.wsp-list-item a.delete-btn {
 .footer-container {
   background-color: #0093E9;
   background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .footer {
+  display: inline-block;
+  vertical-align: top;
   padding: 5px 20px;
   background: transparent;
   color: white;
@@ -203,18 +201,6 @@ li.wsp-list-item a.delete-btn {
   background-position: center;
 }
 
-.footer#openOptionsPage {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  background-image: url("../img/settings.svg");
-  background-size: 16px;
-  background-repeat: no-repeat;
-  background-position: center;
-
-  /* override default Firefox border */
-  border: 0 none;
-}
 
 [contenteditable] {
   outline: 0px solid transparent;
