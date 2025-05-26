@@ -65,6 +65,12 @@ class WorkspaceUI {
         window.close();
       }
     });
+
+    // open extensions option page on settings icon click
+    document.getElementById("openOptionsPage").addEventListener("click", () => {
+      browser.runtime.openOptionsPage();
+    });
+
   }
 
   async _callBackgroundTask(action, args) {

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "workspace-manager",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A workspace manager.",
   "icons": {
     "48": "icons/wsp-48.png",
@@ -32,5 +32,9 @@
       "backend/handler.js",
       "backend/util.js"
     ]
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "browser_style": true
   }
 }
