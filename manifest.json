@@ -33,7 +33,7 @@
       "backend/workspace.js",
       "backend/brainer.js",    
       "backend/handler.js",
-      "backend/util.js"
+      "backend/tint.js"
     ]
   }
 }

@@ -46,6 +46,42 @@ applyTheme();
 browser.theme.onUpdated.addListener(applyTheme);
 
 
+function showCustomDialog({ message, withInput = false, defaultValue = "" }) {
+  return new Promise((resolve) => {
+    const backdrop = document.getElementById("custom-dialog-backdrop");
+    const msgEl = document.getElementById("custom-dialog-message");
+    const inputEl = document.getElementById("custom-dialog-input");
+    const okBtn = document.getElementById("custom-dialog-ok");
+    const cancelBtn = document.getElementById("custom-dialog-cancel");
+
+    msgEl.textContent = message;
+    inputEl.hidden = !withInput;
+    inputEl.value = defaultValue;
+
+    backdrop.classList.add("show");
+    inputEl.focus();
+
+    function cleanup(result) {
+      backdrop.classList.remove("show");
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      resolve(result);
+    }
+
+    function onOk() {
+      cleanup(withInput ? inputEl.value : true);
+    }
+
+    function onCancel() {
+      cleanup(false);
+    }
+
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+  });
+}
+
+
 
 class WorkspaceUI {
   constructor() {
@@ -168,105 +204,29 @@ class WorkspaceUI {
       await this._callBackgroundTask("activateWorkspace", { wspId: workspace.id, windowId: workspace.windowId });
     });
 
-    // rename a workspace by double-clicking
-    li.addEventListener("dblclick", (e) => {
-      // make it editable
-      span1.contentEditable = true;
-
-      // focus and move cursor to the end of span
-      span1.focus();
-      document.execCommand("selectAll", false, null);
-      document.getSelection().collapseToEnd();
-
-      span1.addEventListener("keydown", async (e) => {
-        if (span1.textContent.length === 0) {
-          return;
-        }
-
-        if (e.key === "Enter") {
-          e.preventDefault();
-          
-          if (span1.textContent.length > 0 && span1.textContent !== li.dataset.originalText) {
-            const wspName = span1.textContent;
-            const wspId = li.dataset.wspId;
-            li.dataset.originalText = wspName;
-            // rename a workspace
-            await this._callBackgroundTask("renameWorkspace", { wspId, wspName });
-          } else {
-            span1.textContent = li.dataset.originalText;
-          }
-
-          span1.contentEditable = false;
-          span1.blur();
-        }
-      });
-
-      span1.addEventListener("blur", async (e) => {
-        if (span1.textContent.length > 0 && span1.textContent !== li.dataset.originalText) {
-          const wspName = span1.textContent;
-          const wspId = li.dataset.wspId;
-          li.dataset.originalText = wspName;
-          // rename a workspace
-          await this._callBackgroundTask("renameWorkspace", { wspId, wspName });
-        } else {
-          span1.textContent = li.dataset.originalText;
-        }
-      });
-    });
-
     // rename a workspace by clicking on the rename button
-    renameBtn.addEventListener("click", (e) => {
+    renameBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      // make it editable
-      span1.contentEditable = true;
 
-      // focus and move cursor to the end of span
-      span1.focus();
-      document.execCommand("selectAll", false, null);
-      document.getSelection().collapseToEnd();
-
-      span1.addEventListener("keydown", async (e) => {
-        if (span1.textContent.length === 0) {
+      const inputValue = await showCustomDialog({ message: "Rename workspace:", withInput: true, defaultValue: li.dataset.originalText });
+      if (inputValue !== false && inputValue !== li.dataset.originalText) {
+        const wspName = inputValue.trim();
+        if (wspName.length === 0) {
           return;
         }
-
-        if (e.key === "Enter") {
-          e.preventDefault();
-          
-          if (span1.textContent.length > 0 && span1.textContent !== li.dataset.originalText) {
-            const wspName = span1.textContent;
-            const wspId = li.dataset.wspId;
-            li.dataset.originalText = wspName;
-            // rename a workspace
-            await this._callBackgroundTask("renameWorkspace", { wspId, wspName });
-          } else {
-            span1.textContent = li.dataset.originalText;
-          }
-
-          span1.contentEditable = false;
-          span1.blur();
-        }
-      });
-
-      span1.addEventListener("blur", async (e) => {
-        if (span1.textContent.length > 0 && span1.textContent !== li.dataset.originalText) {
-          const wspName = span1.textContent;
-          const wspId = li.dataset.wspId;
-          li.dataset.originalText = wspName;
-          // rename a workspace
-          await this._callBackgroundTask("renameWorkspace", { wspId, wspName });
-        } else {
-          span1.textContent = li.dataset.originalText;
-        }
-      });
+        const wspId = li.dataset.wspId;
+        li.dataset.originalText = wspName;
+        span1.textContent = wspName;
+        // rename a workspace
+        await this._callBackgroundTask("renameWorkspace", { wspId, wspName });
+      }
     });
 
     // delete a workspace
     deleteBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      // const deleteConfirmed = confirm(`Are you sure you want to delete ${workspace.name}?`);
-      const deleteConfirmed = await this._promisfyConfirm(`Are you sure you want to delete ${workspace.name}?`);
 
+      const deleteConfirmed = await showCustomDialog({ message: `Are you sure you want to delete "${li.dataset.originalText}"?` });
       if (!deleteConfirmed) {
         return;
       }
@@ -274,26 +234,23 @@ class WorkspaceUI {
       const liParent = li.parentElement;
 
       if (liParent.childElementCount === 1) {
-        // const deleteLastWspConfirmed = confirm(`Deleting the last workspace will close the window.\nDo you still want to delete ${workspace.name}?`);
-
-        const deleteLastWspConfirmed = await this._promisfyConfirm(`Deleting the last workspace will close the window.\nDo you still want to delete ${workspace.name}?`);
+        const deleteLastWspConfirmed = await showCustomDialog({ message: `Deleting the last workspace will close the window.\nDo you still want to continue to delete ${li.dataset.originalText}?` });
 
         if (!deleteLastWspConfirmed) {
           return;
         }
       }
 
-      li.parentNode.removeChild(li);
-      await this._callBackgroundTask("destroyWsp", { wspId: workspace.id });
-
       // removing the active workspace
+      li.parentNode.removeChild(li);
       if (li.classList.contains("active")) {
         // set the first child of the parent to be active
         const firstChild = liParent.children[0];
         firstChild.classList.add("active");
         firstChild.firstElementChild.checked = true;
-        await this._callBackgroundTask("activateWorkspace", { wspId: firstChild.dataset.wspId });
+        await this._callBackgroundTask("activateWorkspace", { wspId: firstChild.dataset.wspId, windowId: workspace.windowId });
       }
+      await this._callBackgroundTask("destroyWsp", { wspId: workspace.id });
     });
 
     return li;
@@ -348,14 +305,6 @@ class WorkspaceUI {
       li.classList.remove("active");
       li.firstElementChild.checked = false;
     }
-  }
-
-  _promisfyConfirm(message) {
-    return new Promise((resolve, reject) => {
-      Fnon.Ask.Danger(message, "Danger", "OK", "Cancel", (result) => {
-        resolve(result);
-      });
-    });
   }
 }
 
