@@ -102,19 +102,44 @@ class WSPStorageManger {
   }
 
   static async getPrimaryWindowId() {
-    const key = `primaryWindowId`;
+    const key = `primary-window-id`;
     const result = await browser.storage.local.get(key);
     return result[key];
   }
 
   static async setPrimaryWindowId(windowId) {
-    const key = `primaryWindowId`;
+    const key = `primary-window-id`;
     await browser.storage.local.set({[key]: windowId});
   }
 
   static async removePrimaryWindowId() {
-    const key = `primaryWindowId`;
+    const key = `primary-window-id`;
     await browser.storage.local.remove(key);
+  }
+
+  static async getPrimaryWindowLastId() {
+    const key = `primary-window-last-id`;
+    const result = await browser.storage.local.get(key);
+    return result[key];
+  }
+
+  static async setPrimaryWindowLastId(windowId) {
+    const key = `primary-window-last-id`;
+    await browser.storage.local.set({[key]: windowId});
+  }
+
+  static async getWindowTabIndexMapping() {
+    const key = `primary-window-tab-index-mapping`;
+    const results = await browser.storage.local.get(key);
+
+    return results[key] || {};
+  }
+
+  static async saveWindowTabIndexMapping(mapping) {
+    const key = `primary-window-tab-index-mapping`;
+    await browser.storage.local.set({
+      [key]: mapping
+    });
   }
 
 }

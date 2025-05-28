@@ -5,10 +5,12 @@ class Brainer {
   }
 
   static registerListeners() {
+    let initialized = false;
+
     // initial set up when first installed
     browser.runtime.onInstalled.addListener(async (details) => {
       const currentWindow = await browser.windows.getCurrent();
-      if (await WSPStorageManger.getPrimaryWindowId() == null) {
+      if (await WSPStorageManger.getPrimaryWindowId() == null && await WSPStorageManger.getPrimaryWindowLastId() == null) {
         await WSPStorageManger.setPrimaryWindowId(currentWindow.id);
       }
 
@@ -28,27 +30,9 @@ class Brainer {
       }
     });
 
-    // make sure we don't miss an important event of this extension
-    browser.runtime.onUpdateAvailable.addListener(async (details) => {
-      const currentWindow = await browser.windows.getCurrent();
-      const activeWsp = await Brainer.getActiveWsp(currentWindow.id);
-
-      if (!activeWsp && await WSPStorageManger.getPrimaryWindowId() === currentWindow.id) {
-        const currentTabs = await browser.tabs.query({windowId: currentWindow.id});
-        const wsp = {
-          id: Date.now(),
-          name: Brainer.generateWspName(),
-          active: true,
-          tabs: [...currentTabs.map(tab => tab.id)],
-          windowId: currentWindow.id
-        };
-
-        await Brainer.createWorkspace(wsp);
-      }
-    });
-
     browser.windows.onCreated.addListener(async (window) => {
-      if (await WSPStorageManger.getPrimaryWindowId() == null) {
+      // initial startup
+      if (await WSPStorageManger.getPrimaryWindowId() == null && await WSPStorageManger.getPrimaryWindowLastId() == null) {
         await WSPStorageManger.setPrimaryWindowId(window.id);
 
         const wsp = {
@@ -60,16 +44,72 @@ class Brainer {
         };
 
         await Brainer.createWorkspace(wsp);
+        return;
+      }
+
+      // browser restart
+      if (await WSPStorageManger.getPrimaryWindowId() == null) {
+        await WSPStorageManger.setPrimaryWindowId(window.id);
+        const newTabs = await browser.tabs.query({windowId: window.id});
+        const oldTabs = await WSPStorageManger.getWindowTabIndexMapping();
+
+        const tabIndexMapping = {};
+        for (const tab of newTabs) {
+          const oldTab = oldTabs.find(t => t.index === tab.index);
+
+          if (oldTab?.url !== tab?.url) {
+            console.warn(`Tab URL mismatch for tab at index ${tab.index}. Old URL: ${oldTab?.url}, New URL: ${tab.url}`);
+          }
+
+          if (oldTab) {
+            tabIndexMapping[oldTab.id] = tab.id;
+          }
+        }
+
+        console.log(tabIndexMapping);
+
+        const oldWindowId = await WSPStorageManger.getPrimaryWindowLastId();
+        const workspaces = await WSPStorageManger.getWorkspaces(oldWindowId);
+
+        await WSPStorageManger.destroyWindow(oldWindowId);
+
+        for (const wsp of workspaces) {
+          const newWsp = {
+            id: wsp.id,
+            name: wsp.name,
+            active: wsp.active,
+            tabs: [],
+            groups: wsp.groups,
+            windowId: window.id
+          };
+
+          for (const tabId of wsp.tabs) {
+            if (tabIndexMapping[tabId]) {
+              newWsp.tabs.push(tabIndexMapping[tabId]);
+            }
+          }
+
+          for (const group of newWsp.groups) {
+            const oldTabs = group.tabs;
+            group.tabs = [];
+            for (const tabId of oldTabs) {
+              if (tabIndexMapping[tabId]) {
+                group.tabs.push(tabIndexMapping[tabId]);
+              }
+            }
+          }
+
+          await Workspace.create(newWsp.id, newWsp);
+        }
+        initialized = true;
       }
     });
 
-    // when a window is closed, delete workspaces data associated to this window
     browser.windows.onRemoved.addListener(async (windowId) => {
-      // todo check if tabs are restored or not and maybe destroy old session data
-      //if (!shouldRememberWorkspaces) await WSPStorageManger.destroyWindow(windowId);
-
       if (await WSPStorageManger.getPrimaryWindowId() === windowId) {
         await WSPStorageManger.removePrimaryWindowId();
+        await WSPStorageManger.setPrimaryWindowLastId(windowId);
+        await WSPStorageManger.saveWindowTabIndexMapping(tabTracker.getTabs(windowId));
       }
     });
 
@@ -83,19 +123,27 @@ class Brainer {
       if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
         return;
       }
+      console.debug(`Tab created: #${tab.id}`);
+
 
       const activeWsp = await Brainer.getActiveWsp(tab.windowId);
 
       if (activeWsp) {
-        activeWsp.tabs.push(tab.id);
+        if (!activeWsp.tabs.includes(tab.id)) {
+          activeWsp.tabs.push(tab.id);
+        }
         await activeWsp._saveState();
         await this.refreshTabMenu();
       } else {
+        // todo: needed?
+
         const intervalRef = setInterval(async () => {
           const activeWsp = await Brainer.getActiveWsp(tab.windowId);
           if (activeWsp) {
             clearInterval(intervalRef);
-            activeWsp.tabs.push(tab.id);
+            if (!activeWsp.tabs.includes(tab.id)) {
+              activeWsp.tabs.push(tab.id);
+            }
             await activeWsp._saveState();
             await this.refreshTabMenu();
           }
@@ -107,6 +155,11 @@ class Brainer {
       if (await WSPStorageManger.getPrimaryWindowId() !== removeInfo.windowId) {
         return;
       }
+      if (removeInfo.isWindowClosing) {
+        return;
+      }
+      console.debug(`Tab removed: #${tabId}`);
+
 
       const activeWsp = await Brainer.getActiveWsp(removeInfo.windowId);
       const removedTabIdx = activeWsp.tabs.findIndex(tId => tId === tabId);
@@ -135,14 +188,14 @@ class Brainer {
       if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
         return;
       }
+      console.debug(`Tab updated: #${tabId}`);
 
-      if (tab.hidden) {
+      if (!tab.hidden) {
+        const activeWsp = await Brainer.getActiveWsp(tab.windowId);
+        await activeWsp.updateTabGroups();
+      } else {
         return;
       }
-      const activeWsp = await Brainer.getActiveWsp(tab.windowId);
-      await activeWsp.updateTabGroups();
-      await activeWsp._saveState();
-
     }, {properties: ["groupId"]});
 
     browser.tabGroups.onUpdated.addListener(async (group) => {
@@ -153,7 +206,6 @@ class Brainer {
       const activeWsp = await Brainer.getActiveWsp(group.windowId);
       if (activeWsp) {
         await activeWsp.updateTabGroups();
-        await activeWsp._saveState();
       }
     });
 

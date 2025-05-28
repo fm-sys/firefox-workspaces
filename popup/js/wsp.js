@@ -255,6 +255,11 @@ class WorkspaceUI {
       if (li.classList.contains("active")) {
         // set the first child of the parent to be active
         const firstChild = liParent.children[0];
+
+        if (!firstChild) {
+          return;
+        }
+
         firstChild.classList.add("active");
         firstChild.firstElementChild.checked = true;
         await this._callBackgroundTask("activateWorkspace", { wspId: firstChild.dataset.wspId, windowId: workspace.windowId });

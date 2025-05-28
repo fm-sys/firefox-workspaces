@@ -64,11 +64,11 @@ class Workspace {
 
   async updateTabGroups() {
     const groups = await browser.tabGroups.query({windowId: this.windowId});
-    const tabs = await browser.tabs.query({windowId: this.windowId, hidden: false});
+    const tabs = await browser.tabs.query({windowId: this.windowId});
 
     this.groups = groups.map(group => {
       const tabIds = tabs
-        .filter(tab => tab.groupId === group.id)
+        .filter(tab => tab.groupId === group.id && this.tabs.includes(tab.id))
         .map(tab => tab.id);
 
       return {
@@ -78,7 +78,9 @@ class Workspace {
         collapsed: group.collapsed,
         tabs: tabIds
       };
-    });
+    }).filter(group => group.tabs.length > 0);
+
+    await this._saveState();
   }
 
   static async rename(wspId, wspName) {
