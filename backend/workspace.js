@@ -5,6 +5,7 @@ class Workspace {
     this.active = state.active;
     this.tabs = state.tabs;
     this.windowId = state.windowId;
+    this.groups = state.groups || [];
   }
 
   static async create(id, state) {
@@ -32,6 +33,18 @@ class Workspace {
 
   async activate(activeTabId = null) {
     if (this.tabs.length > 0) {
+
+      for (const group of this.groups) {
+        if (group.tabs.length > 0) {
+          const groupId = await browser.tabs.group({ tabIds: group.tabs });
+          await browser.tabGroups.update(groupId, {
+              title: group.title,
+              color: group.color,
+              collapsed: group.collapsed
+          });
+        }
+      }
+
       await browser.tabs.show(this.tabs);
       await browser.tabs.update(activeTabId || this.tabs[0], { active: true });
     }
@@ -44,8 +57,28 @@ class Workspace {
     this.active = false;
     
     await browser.tabs.hide(this.tabs);
+    await browser.tabs.ungroup(this.tabs);
 
     await this._saveState();
+  }
+
+  async updateTabGroups() {
+    const groups = await browser.tabGroups.query({windowId: this.windowId});
+    const tabs = await browser.tabs.query({ windowId: this.windowId, hidden: false });
+
+    this.groups = groups.map(group => {
+      const tabIds = tabs
+          .filter(tab => tab.groupId === group.id)
+          .map(tab => tab.id);
+
+      return {
+        // groupId: group.id,
+        title: group.title,
+        color: group.color,
+        collapsed: group.collapsed,
+        tabs: tabIds
+      };
+    });
   }
 
   static async rename(wspId, wspName) {
@@ -64,6 +97,7 @@ class Workspace {
       name: this.name,
       active: this.active,
       tabs: this.tabs,
+      groups: this.groups,
       windowId: this.windowId
     });
   }

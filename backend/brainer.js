@@ -93,6 +93,12 @@ class Brainer {
       
       if (removedTabIdx >= 0) {
         activeWsp.tabs.splice(removedTabIdx, 1);
+        for (const group of activeWsp.groups) {
+          const tabIdx = group.tabs.indexOf(tabId);
+          if (tabIdx >= 0) {
+            group.tabs.splice(tabIdx, 1);
+          }
+        }
         await activeWsp._saveState();
         if (activeWsp.tabs.length === 0) {
           await Brainer.destroyWsp(activeWsp.id);
@@ -104,6 +110,25 @@ class Brainer {
         await this.refreshTabMenu();
       }
     });
+
+    browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+      if (tab.hidden) {
+        return;
+      }
+      const activeWsp = await Brainer.getActiveWsp(tab.windowId);
+      await activeWsp.updateTabGroups();
+        await activeWsp._saveState();
+
+    }, { properties: ["groupId"] });
+
+    browser.tabGroups.onUpdated.addListener(async (group) => {
+        const activeWsp = await Brainer.getActiveWsp(group.windowId);
+        if (activeWsp) {
+            await activeWsp.updateTabGroups();
+            await activeWsp._saveState();
+        }
+    });
+
   }
 
   static async initializeTabMenu() {
@@ -153,7 +178,8 @@ class Brainer {
       await activeWsp._saveState();
     }
 
-    await Workspace.create(wsp.id, wsp);
+    const w = await Workspace.create(wsp.id, wsp);
+    await w.updateTabGroups();
 
     await this.refreshTabMenu();
   }
