@@ -234,7 +234,7 @@ class WorkspaceUI {
       const liParent = li.parentElement;
 
       if (liParent.childElementCount === 1) {
-        const deleteLastWspConfirmed = await showCustomDialog({ message: `Deleting the last workspace will close the window.\nDo you still want to continue to delete ${li.dataset.originalText}?` });
+        const deleteLastWspConfirmed = await showCustomDialog({ message: `Deleting the last workspace will close the window.\nDo you want to continue?` });
 
         if (!deleteLastWspConfirmed) {
           return;
