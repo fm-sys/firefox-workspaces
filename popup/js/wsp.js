@@ -89,18 +89,22 @@ class WorkspaceUI {
   }
 
   async initialize() {
-    this.workspaces.push(...await this.getWorkspaces());
+    const currentWindowId = (await browser.windows.getCurrent()).id;
+
+    if (await this._callBackgroundTask("getPrimaryWindowId") !== currentWindowId) {
+      document.getElementById("createNewWsp").style.display = "none";
+      document.getElementById("wsp-list").innerHTML = "<li class='no-wsp'>Workspaces are only available in the primary window.</li>";
+      return;
+    }
+
+    this.workspaces.push(...await this.getWorkspaces(currentWindowId));
     this.displayWorkspaces();
     this.handleEvents();
   }
 
-  async getWorkspaces() {
-    const currentWindowId = (await browser.windows.getCurrent()).id;
-
+  async getWorkspaces(currentWindowId) {
     const workspaces = await this._callBackgroundTask("getWorkspaces", { windowId: currentWindowId });
-
     workspaces.sort((a, b) => a.name.localeCompare(b.name));
-
     return workspaces;
   }
 
@@ -191,6 +195,11 @@ class WorkspaceUI {
 
     // select a workspace
     li.addEventListener("click", async (e) => {
+      if (li.classList.contains("active")) {
+        // if the workspace is already active, do nothing
+        return;
+      }
+
       const lis = document.getElementsByTagName("li");
 
       // uncheck other boxes

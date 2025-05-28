@@ -36,26 +36,26 @@ class Workspace {
 
       for (const group of this.groups) {
         if (group.tabs.length > 0) {
-          const groupId = await browser.tabs.group({ tabIds: group.tabs });
+          const groupId = await browser.tabs.group({tabIds: group.tabs});
           await browser.tabGroups.update(groupId, {
-              title: group.title,
-              color: group.color,
-              collapsed: group.collapsed
+            title: group.title,
+            color: group.color,
+            collapsed: group.collapsed
           });
         }
       }
 
       await browser.tabs.show(this.tabs);
-      await browser.tabs.update(activeTabId || this.tabs[0], { active: true });
+      await browser.tabs.update(activeTabId || this.tabs[0], {active: true});
     }
-    
+
     this.active = true;
     await this._saveState();
   }
 
   async hideTabs() {
     this.active = false;
-    
+
     await browser.tabs.hide(this.tabs);
     await browser.tabs.ungroup(this.tabs);
 
@@ -64,12 +64,12 @@ class Workspace {
 
   async updateTabGroups() {
     const groups = await browser.tabGroups.query({windowId: this.windowId});
-    const tabs = await browser.tabs.query({ windowId: this.windowId, hidden: false });
+    const tabs = await browser.tabs.query({windowId: this.windowId, hidden: false});
 
     this.groups = groups.map(group => {
       const tabIds = tabs
-          .filter(tab => tab.groupId === group.id)
-          .map(tab => tab.id);
+        .filter(tab => tab.groupId === group.id)
+        .map(tab => tab.id);
 
       return {
         // groupId: group.id,

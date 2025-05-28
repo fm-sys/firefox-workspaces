@@ -98,7 +98,23 @@ class WSPStorageManger {
 
   static async setFirstTimeCreateWspToFalse(windowId) {
     const key = `ld-wsp-window-${windowId}-first-wsp-creation`;
-    await browser.storage.local.set({ [key]: false });
+    await browser.storage.local.set({[key]: false});
+  }
+
+  static async getPrimaryWindowId() {
+    const key = `primaryWindowId`;
+    const result = await browser.storage.local.get(key);
+    return result[key];
+  }
+
+  static async setPrimaryWindowId(windowId) {
+    const key = `primaryWindowId`;
+    await browser.storage.local.set({[key]: windowId});
+  }
+
+  static async removePrimaryWindowId() {
+    const key = `primaryWindowId`;
+    await browser.storage.local.remove(key);
   }
 
 }

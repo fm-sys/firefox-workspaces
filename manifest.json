@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Firefox Workspaces",
+  "name": "Workspaces",
   "version": "1.0.0",
-  "description": "A beautiful workspace manager. Nothing more, nothing less.",
+  "description": "A beautiful workspace manager for Firefox",
   "icons": {
     "48": "icons/icon48.png",
     "96": "icons/icon96.png"

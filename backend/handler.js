@@ -27,6 +27,9 @@ if (browser) {
         break;
       case "getWorkspaceName":
         return Brainer.generateWspName();
+        break;
+      case "getPrimaryWindowId":
+        return await WSPStorageManger.getPrimaryWindowId();
     }
   });
 }

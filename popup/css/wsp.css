@@ -161,6 +161,20 @@ li.wsp-list-item a.delete-btn {
     mask-size: contain;
 }
 
+li.no-wsp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 250px;
+    height: 100%;
+    width: 100%;
+    padding: 20px;
+    color: var(--text-popup);
+    font-size: 1.2em;
+}
+
 /* ============================= */
 /* 6. Footer
 /* ============================= */

@@ -1,4 +1,4 @@
-# A Workspace Manager Extension for Firefox
+# Workspaces - _a beautiful workspace manager for Firefox_
 
 Let's group your tabs into workspaces to navigate through tabs more efficiently.
 
@@ -20,4 +20,4 @@ This extension utilizes tab show and hide APIs so giving it a permission to keep
 
 ## Acknowledgements
 
-This extension was based on [workspace-manager](https://addons.mozilla.org/de/firefox/addon/workspace-manager/) with major adoptions to feature a firefox native look and feel.
+This extension was based on [workspace-manager](https://addons.mozilla.org/de/firefox/addon/workspace-manager/) with major adoptions to support tab groups and feature a native look and feel.
