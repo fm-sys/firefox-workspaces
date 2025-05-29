@@ -6,6 +6,7 @@ class Workspace {
     this.tabs = state.tabs;
     this.windowId = state.windowId;
     this.groups = state.groups || [];
+    this.lastActiveTabId = state.lastActiveTabId || null;
   }
 
   static async create(id, state) {
@@ -46,7 +47,7 @@ class Workspace {
       }
 
       await browser.tabs.show(this.tabs);
-      await browser.tabs.update(activeTabId || this.tabs[0], {active: true});
+      await browser.tabs.update(activeTabId || this.lastActiveTabId || this.tabs[0], {active: true});
     }
 
     this.active = true;
@@ -100,7 +101,8 @@ class Workspace {
       active: this.active,
       tabs: this.tabs,
       groups: this.groups,
-      windowId: this.windowId
+      windowId: this.windowId,
+      lastActiveTabId: this.lastActiveTabId
     });
   }
 }

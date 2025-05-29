@@ -242,13 +242,13 @@ class WorkspaceUI {
 
       const liParent = li.parentElement;
 
-      if (liParent.childElementCount === 1) {
-        const deleteLastWspConfirmed = await showCustomDialog({ message: `Deleting the last workspace will close the window.\nDo you want to continue?` });
-
-        if (!deleteLastWspConfirmed) {
-          return;
-        }
-      }
+      // if (liParent.childElementCount === 1) {
+      //   const deleteLastWspConfirmed = await showCustomDialog({ message: `Deleting the last workspace will close the window.\nDo you want to continue?` });
+      //
+      //   if (!deleteLastWspConfirmed) {
+      //     return;
+      //   }
+      // }
 
       // removing the active workspace
       li.parentNode.removeChild(li);
@@ -256,13 +256,11 @@ class WorkspaceUI {
         // set the first child of the parent to be active
         const firstChild = liParent.children[0];
 
-        if (!firstChild) {
-          return;
+        if (firstChild) {
+          firstChild.classList.add("active");
+          firstChild.firstElementChild.checked = true;
+          await this._callBackgroundTask("activateWorkspace", { wspId: firstChild.dataset.wspId, windowId: workspace.windowId });
         }
-
-        firstChild.classList.add("active");
-        firstChild.firstElementChild.checked = true;
-        await this._callBackgroundTask("activateWorkspace", { wspId: firstChild.dataset.wspId, windowId: workspace.windowId });
       }
       await this._callBackgroundTask("destroyWsp", { wspId: workspace.id });
     });
