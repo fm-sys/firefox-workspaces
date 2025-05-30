@@ -141,19 +141,15 @@ class Brainer {
         await activeWsp._saveState();
         await this.refreshTabMenu();
       } else {
-        // todo: needed?
-
-        // const intervalRef = setInterval(async () => {
-        //   const activeWsp = await Brainer.getActiveWsp(tab.windowId);
-        //   if (activeWsp) {
-        //     clearInterval(intervalRef);
-        //     if (!activeWsp.tabs.includes(tab.id)) {
-        //       activeWsp.tabs.push(tab.id);
-        //     }
-        //     await activeWsp._saveState();
-        //     await this.refreshTabMenu();
-        //   }
-        // }, 100);
+        // if there is no active workspace, we create a new one
+        const wsp = {
+          id: Date.now(),
+          name: Brainer.generateWspName(),
+          active: true,
+          tabs: [tab.id],
+          windowId: tab.windowId
+        };
+        await Brainer.createWorkspace(wsp);
       }
     });
 
