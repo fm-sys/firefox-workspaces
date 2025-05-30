@@ -28,6 +28,7 @@ class Brainer {
 
         await Brainer.createWorkspace(wsp);
       }
+      initialized = true;
     });
 
     browser.windows.onCreated.addListener(async (window) => {
@@ -121,16 +122,20 @@ class Brainer {
     });
 
     browser.tabs.onCreated.addListener(async (tab) => {
-      if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
+      if (!initialized /*make sure to don't catch up tabs during startup*/ || await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
         return;
       }
       console.debug(`Tab created: #${tab.id}`);
 
 
-      const activeWsp = await Brainer.getActiveWsp(tab.windowId);
+      const workspaces = await WSPStorageManger.getWorkspaces(tab.windowId);
+      const activeWsp = workspaces.find(wsp => wsp.active);
+
+      // const activeWsp = await Brainer.getActiveWsp(tab.windowId);
 
       if (activeWsp) {
-        if (!activeWsp.tabs.includes(tab.id)) {
+        if (!workspaces.find(wsp => wsp.tabs.includes(tab.id))) {
+        // if (!activeWsp.tabs.includes(tab.id)) {
           activeWsp.tabs.push(tab.id);
         }
         await activeWsp._saveState();
@@ -138,17 +143,17 @@ class Brainer {
       } else {
         // todo: needed?
 
-        const intervalRef = setInterval(async () => {
-          const activeWsp = await Brainer.getActiveWsp(tab.windowId);
-          if (activeWsp) {
-            clearInterval(intervalRef);
-            if (!activeWsp.tabs.includes(tab.id)) {
-              activeWsp.tabs.push(tab.id);
-            }
-            await activeWsp._saveState();
-            await this.refreshTabMenu();
-          }
-        }, 100);
+        // const intervalRef = setInterval(async () => {
+        //   const activeWsp = await Brainer.getActiveWsp(tab.windowId);
+        //   if (activeWsp) {
+        //     clearInterval(intervalRef);
+        //     if (!activeWsp.tabs.includes(tab.id)) {
+        //       activeWsp.tabs.push(tab.id);
+        //     }
+        //     await activeWsp._saveState();
+        //     await this.refreshTabMenu();
+        //   }
+        // }, 100);
       }
     });
 
