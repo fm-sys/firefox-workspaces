@@ -56,10 +56,10 @@ class Workspace {
 
   async hideTabs() {
     this.active = false;
-
-    await browser.tabs.hide(this.tabs);
-    await browser.tabs.ungroup(this.tabs);
-
+    if (this.tabs.length > 0) {
+      await browser.tabs.hide(this.tabs);
+      await browser.tabs.ungroup(this.tabs);
+    }
     await this._saveState();
   }
 

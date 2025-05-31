@@ -108,7 +108,6 @@ class Brainer {
       if (await WSPStorageManger.getPrimaryWindowId() === windowId) {
         await WSPStorageManger.removePrimaryWindowId();
         await WSPStorageManger.setPrimaryWindowLastId(windowId);
-        await WSPStorageManger.saveWindowTabIndexMapping(currentTabs);
         initialized = false;
       }
     });
@@ -120,7 +119,11 @@ class Brainer {
     });
 
     browser.tabs.onCreated.addListener(async (tab) => {
-      if (!initialized /*make sure to don't catch up tabs during startup*/ || await WSPStorageManger.getPrimaryWindowId() !== tab.windowId || tab.pinned) {
+      if (!initialized) { // make sure to don't catch up tabs during startup
+        return;
+      }
+      await Brainer.updateTabList();
+      if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId || tab.pinned) {
         return;
       }
       console.debug(`Tab created: #${tab.id}`);
@@ -135,6 +138,8 @@ class Brainer {
       if (removeInfo.isWindowClosing) {
         return;
       }
+      await Brainer.updateTabList(tabId);  // actually called directly before removing the tab, therefore set
+
       console.debug(`Tab removed: #${tabId}`);
 
       await Brainer.removeTabFromWorkspace(removeInfo.windowId, tabId);
@@ -176,6 +181,20 @@ class Brainer {
       }
     });
 
+  }
+
+  static async updateTabList(excludeTabId = null) {
+    try {
+      const tabs = await browser.tabs.query({windowId: await WSPStorageManger.getPrimaryWindowId()});
+      const currentTabs = tabs.filter(tab => tab.id !== excludeTabId).map(tab => ({
+        id: tab.id,
+        index: tab.index,
+      }));
+      await WSPStorageManger.saveWindowTabIndexMapping(currentTabs);
+      console.log("Updated tab list:", currentTabs);
+    } catch (e) {
+      console.error("Error updating tab list", e);
+    }
   }
 
   static async addTabToWorkspace(tab) {
