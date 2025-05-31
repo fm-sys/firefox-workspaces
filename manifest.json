@@ -31,7 +31,6 @@
   "background": {
     "scripts": [
       "backend/storage.js",
-      "backend/tabtracker.js",
       "backend/workspace.js",
       "backend/brainer.js",    
       "backend/handler.js",

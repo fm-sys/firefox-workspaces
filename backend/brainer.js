@@ -96,10 +96,18 @@ class Brainer {
               }
             }
           }
-
           await Workspace.create(newWsp.id, newWsp);
         }
-        await WSPStorageManger.saveWindowTabIndexMapping([]);
+
+        for (const tab of newTabs) {
+          if (!tab.pinned) {
+            // method takes care of checking if it's not already present in any workspace
+            if (await Brainer.addTabToWorkspace(tab)) {
+              await browser.tabs.show(tab.id);
+            }
+          }
+        }
+        await Brainer.updateTabList();
         initialized = true;
       }
     });
@@ -138,7 +146,10 @@ class Brainer {
       if (removeInfo.isWindowClosing) {
         return;
       }
-      await Brainer.updateTabList(tabId);  // actually called directly before removing the tab, therefore set
+      // Optional: wait 100ms before querying to avoid common race condition
+      setTimeout(async () => {
+        await Brainer.updateTabList();
+      }, 100);
 
       console.debug(`Tab removed: #${tabId}`);
 
@@ -186,7 +197,7 @@ class Brainer {
   static async updateTabList(excludeTabId = null) {
     try {
       const tabs = await browser.tabs.query({windowId: await WSPStorageManger.getPrimaryWindowId()});
-      const currentTabs = tabs.filter(tab => tab.id !== excludeTabId).map(tab => ({
+      const currentTabs = tabs.map(tab => ({
         id: tab.id,
         index: tab.index,
       }));
@@ -201,14 +212,13 @@ class Brainer {
     const workspaces = await WSPStorageManger.getWorkspaces(tab.windowId);
     const activeWsp = workspaces.find(wsp => wsp.active);
 
-    // const activeWsp = await Brainer.getActiveWsp(tab.windowId);
-
     if (activeWsp) {
       if (!workspaces.find(wsp => wsp.tabs.includes(tab.id))) {
         activeWsp.tabs.push(tab.id);
+        await activeWsp._saveState();
+        await this.refreshTabMenu();
+        return true;
       }
-      await activeWsp._saveState();
-      await this.refreshTabMenu();
     } else {
       // if there is no active workspace, we create a new one
       const wsp = {
@@ -220,6 +230,7 @@ class Brainer {
       };
       await Brainer.createWorkspace(wsp);
     }
+    return false;
   }
 
   static async removeTabFromWorkspace(windowId, tabId) {
