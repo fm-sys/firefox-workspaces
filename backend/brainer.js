@@ -58,10 +58,6 @@ class Brainer {
         for (const tab of newTabs) {
           const oldTab = oldTabs.find(t => t.index === tab.index);
 
-          if (oldTab?.url !== tab?.url) {
-            console.warn(`Tab URL mismatch for tab at index ${tab.index}. Old URL: ${oldTab?.url}, New URL: ${tab.url}`);
-          }
-
           if (oldTab) {
             tabIndexMapping[oldTab.id] = tab.id;
           }
@@ -103,6 +99,7 @@ class Brainer {
 
           await Workspace.create(newWsp.id, newWsp);
         }
+        await WSPStorageManger.saveWindowTabIndexMapping([]);
         initialized = true;
       }
     });
@@ -111,7 +108,8 @@ class Brainer {
       if (await WSPStorageManger.getPrimaryWindowId() === windowId) {
         await WSPStorageManger.removePrimaryWindowId();
         await WSPStorageManger.setPrimaryWindowLastId(windowId);
-        await WSPStorageManger.saveWindowTabIndexMapping(tabTracker.getTabs(windowId));
+        await WSPStorageManger.saveWindowTabIndexMapping(currentTabs);
+        initialized = false;
       }
     });
 
@@ -122,35 +120,12 @@ class Brainer {
     });
 
     browser.tabs.onCreated.addListener(async (tab) => {
-      if (!initialized /*make sure to don't catch up tabs during startup*/ || await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
+      if (!initialized /*make sure to don't catch up tabs during startup*/ || await WSPStorageManger.getPrimaryWindowId() !== tab.windowId || tab.pinned) {
         return;
       }
       console.debug(`Tab created: #${tab.id}`);
 
-
-      const workspaces = await WSPStorageManger.getWorkspaces(tab.windowId);
-      const activeWsp = workspaces.find(wsp => wsp.active);
-
-      // const activeWsp = await Brainer.getActiveWsp(tab.windowId);
-
-      if (activeWsp) {
-        if (!workspaces.find(wsp => wsp.tabs.includes(tab.id))) {
-        // if (!activeWsp.tabs.includes(tab.id)) {
-          activeWsp.tabs.push(tab.id);
-        }
-        await activeWsp._saveState();
-        await this.refreshTabMenu();
-      } else {
-        // if there is no active workspace, we create a new one
-        const wsp = {
-          id: Date.now(),
-          name: Brainer.generateWspName(),
-          active: true,
-          tabs: [tab.id],
-          windowId: tab.windowId
-        };
-        await Brainer.createWorkspace(wsp);
-      }
+      await Brainer.addTabToWorkspace(tab);
     });
 
     browser.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
@@ -162,41 +137,31 @@ class Brainer {
       }
       console.debug(`Tab removed: #${tabId}`);
 
-
-      const activeWsp = await Brainer.getActiveWsp(removeInfo.windowId);
-      const removedTabIdx = activeWsp.tabs.findIndex(tId => tId === tabId);
-
-      if (removedTabIdx >= 0) {
-        activeWsp.tabs.splice(removedTabIdx, 1);
-        for (const group of activeWsp.groups) {
-          const tabIdx = group.tabs.indexOf(tabId);
-          if (tabIdx >= 0) {
-            group.tabs.splice(tabIdx, 1);
-          }
-        }
-        await activeWsp._saveState();
-        if (activeWsp.tabs.length === 0) {
-          await Brainer.destroyWsp(activeWsp.id);
-          const nextWspId = await WSPStorageManger.getNextWspId(activeWsp.windowId);
-          if (nextWspId) {
-            await Brainer.activateWsp(nextWspId);
-          }
-        }
-        await this.refreshTabMenu();
-      }
+      await Brainer.removeTabFromWorkspace(removeInfo.windowId, tabId);
     });
 
     browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
         return;
       }
-      console.debug(`Tab updated: #${tabId}`);
+      console.debug(`Tab updated (pinned): #${tabId}`);
+
+      if (tab.pinned) {
+        await Brainer.removeTabFromWorkspace(tab.windowId, tabId);
+      } else {
+        await Brainer.addTabToWorkspace(tab);
+      }
+    }, {properties: ["pinned"]});
+
+    browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+      if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
+        return;
+      }
+      console.debug(`Tab updated (groupId): #${tabId}`);
 
       if (!tab.hidden) {
         const activeWsp = await Brainer.getActiveWsp(tab.windowId);
         await activeWsp.updateTabGroups();
-      } else {
-        return;
       }
     }, {properties: ["groupId"]});
 
@@ -211,6 +176,55 @@ class Brainer {
       }
     });
 
+  }
+
+  static async addTabToWorkspace(tab) {
+    const workspaces = await WSPStorageManger.getWorkspaces(tab.windowId);
+    const activeWsp = workspaces.find(wsp => wsp.active);
+
+    // const activeWsp = await Brainer.getActiveWsp(tab.windowId);
+
+    if (activeWsp) {
+      if (!workspaces.find(wsp => wsp.tabs.includes(tab.id))) {
+        activeWsp.tabs.push(tab.id);
+      }
+      await activeWsp._saveState();
+      await this.refreshTabMenu();
+    } else {
+      // if there is no active workspace, we create a new one
+      const wsp = {
+        id: Date.now(),
+        name: Brainer.generateWspName(),
+        active: true,
+        tabs: [tab.id],
+        windowId: tab.windowId
+      };
+      await Brainer.createWorkspace(wsp);
+    }
+  }
+
+  static async removeTabFromWorkspace(windowId, tabId) {
+    const activeWsp = await Brainer.getActiveWsp(windowId);
+    const removedTabIdx = activeWsp.tabs.findIndex(tId => tId === tabId);
+
+    if (removedTabIdx >= 0) {
+      activeWsp.tabs.splice(removedTabIdx, 1);
+      for (const group of activeWsp.groups) {
+        const tabIdx = group.tabs.indexOf(tabId);
+        if (tabIdx >= 0) {
+          group.tabs.splice(tabIdx, 1);
+        }
+      }
+      await activeWsp._saveState();
+      if (activeWsp.tabs.length === 0) {
+        await Brainer.destroyWsp(activeWsp.id);
+        const nextWspId = await WSPStorageManger.getNextWspId(activeWsp.windowId);
+        if (nextWspId) {
+          await Brainer.activateWsp(nextWspId);
+        }
+      }
+      await this.refreshTabMenu();
+    }
   }
 
   static async initializeTabMenu() {
