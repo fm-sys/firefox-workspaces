@@ -320,14 +320,6 @@ class Brainer {
     return WSPStorageManger.getNumWorkspaces(windowId);
   }
 
-  static async isFirstTimeCreateWsp(windowId) {
-    return await WSPStorageManger.isFirstTimeCreateWsp(windowId);
-  }
-
-  static async setFirstTimeCreateWspToFalse(windowId) {
-    await WSPStorageManger.setFirstTimeCreateWspToFalse(windowId);
-  }
-
   static async hideInactiveWspTabs(windowId) {
     const workspaces = await WSPStorageManger.getWorkspaces(windowId);
     await Promise.all(workspaces.filter(wsp => !wsp.active).map(wsp => wsp.hideTabs()));

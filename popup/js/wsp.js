@@ -60,6 +60,7 @@ function showCustomDialog({ message, withInput = false, defaultValue = "" }) {
 
     backdrop.classList.add("show");
     inputEl.focus();
+    inputEl.select();
 
     function cleanup(result) {
       backdrop.classList.remove("show");
@@ -147,12 +148,6 @@ class WorkspaceUI {
 
       this._addWorkspace(wsp);
 
-      const isFirstTimeCreateWsp = await this._callBackgroundTask("isFirstTimeCreateWsp", { windowId });
-
-      if (isFirstTimeCreateWsp) {
-        await this._callBackgroundTask("setFirstTimeCreateWspToFalse", { windowId });
-        window.close();
-      }
     });
 
   }
@@ -211,6 +206,9 @@ class WorkspaceUI {
 
       // activate this workspace
       await this._callBackgroundTask("activateWorkspace", { wspId: workspace.id, windowId: workspace.windowId });
+
+      // close popup
+      window.close();
     });
 
     // rename a workspace by clicking on the rename button
@@ -279,6 +277,8 @@ class WorkspaceUI {
     // however, this is easier to understand and implement
     // if performance is an issue, then switch back to sort on fly
     this._sortWorkspaces();
+
+    return li;
   }
 
   // from https://www.w3schools.com/howto/howto_js_sort_list.asp

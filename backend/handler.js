@@ -11,11 +11,6 @@ if (browser) {
         break;
       case "getNumWorkspaces":
         return await Brainer.getNumWorkspaces(message.windowId);
-      case "isFirstTimeCreateWsp":
-        return await Brainer.isFirstTimeCreateWsp(message.windowId);
-      case "setFirstTimeCreateWspToFalse":
-        await Brainer.setFirstTimeCreateWspToFalse(message.windowId);
-        break;
       case "hideInactiveWspTabs":
         await Brainer.hideInactiveWspTabs(message.windowId);
         break;
@@ -27,7 +22,6 @@ if (browser) {
         break;
       case "getWorkspaceName":
         return Brainer.generateWspName();
-        break;
       case "getPrimaryWindowId":
         return await WSPStorageManger.getPrimaryWindowId();
     }
