@@ -134,8 +134,6 @@ class Brainer {
       if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId || tab.pinned) {
         return;
       }
-      console.debug(`Tab created: #${tab.id}`);
-
       await Brainer.addTabToWorkspace(tab);
     });
 
@@ -146,13 +144,10 @@ class Brainer {
       if (removeInfo.isWindowClosing) {
         return;
       }
-      // Optional: wait 100ms before querying to avoid common race condition
+      // wait 100ms before querying to avoid common race condition
       setTimeout(async () => {
         await Brainer.updateTabList();
       }, 100);
-
-      console.debug(`Tab removed: #${tabId}`);
-
       await Brainer.removeTabFromWorkspace(removeInfo.windowId, tabId);
     });
 
@@ -160,8 +155,6 @@ class Brainer {
       if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
         return;
       }
-      console.debug(`Tab updated (pinned): #${tabId}`);
-
       if (tab.pinned) {
         await Brainer.removeTabFromWorkspace(tab.windowId, tabId);
       } else {
@@ -173,8 +166,6 @@ class Brainer {
       if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
         return;
       }
-      console.debug(`Tab updated (groupId): #${tabId}`);
-
       if (!tab.hidden) {
         const activeWsp = await Brainer.getActiveWsp(tab.windowId);
         await activeWsp.updateTabGroups();
