@@ -202,7 +202,6 @@ class Brainer {
         index: tab.index,
       }));
       await WSPStorageManger.saveWindowTabIndexMapping(currentTabs);
-      console.log("Updated tab list:", currentTabs);
     } catch (e) {
       console.error("Error updating tab list", e);
     }
@@ -250,7 +249,7 @@ class Brainer {
         await Brainer.destroyWsp(activeWsp.id);
         const nextWspId = await WSPStorageManger.getNextWspId(activeWsp.windowId);
         if (nextWspId) {
-          await Brainer.activateWsp(nextWspId);
+          await Brainer.activateWsp(nextWspId, activeWsp.windowId);
         }
       }
       await this.refreshTabMenu();
@@ -290,7 +289,20 @@ class Brainer {
         id: `sub-menu-${Date.now()}-${workspace.id}-id`,
         enabled: !workspace.active,
         onclick: async (info, tab) => {
-          await Brainer.moveTabToWsp(tab.id, currentWsp.id, workspace.id);
+          // Get all highlighted tabs in the current window
+          const highlightedTabs = await browser.tabs.query({
+            currentWindow: true,
+            highlighted: true
+          });
+
+          const tabIdsToMove = highlightedTabs.length > 1
+            ? highlightedTabs.map(t => t.id)
+            : [tab.id]; // fallback to single right-clicked tab
+
+          // Move each selected tab to the target workspace
+          for (const tabId of tabIdsToMove) {
+            await Brainer.moveTabToWsp(tabId, currentWsp.id, workspace.id);
+          }
         }
       });
     }
@@ -337,19 +349,22 @@ class Brainer {
     await this.refreshTabMenu();
   }
 
-  static async setCurrentWspDisabled(windowId) {
+  static async setCurrentWspDisabled(windowId, newActiveTabId = null) {
     const activeWsp = await Brainer.getActiveWsp(windowId);
 
     if (activeWsp) {
       activeWsp.active = false;
       activeWsp.lastActiveTabId = (await browser.tabs.query({active: true, currentWindow: true}))[0]?.id || null;
+      if (activeWsp.lastActiveTabId === newActiveTabId) {
+        activeWsp.lastActiveTabId = null;
+      }
       await activeWsp._saveState();
     }
   }
 
   static async activateWsp(wspId, windowId, activeTabId = null) {
     // make other workspaces inactive first
-    await Brainer.setCurrentWspDisabled(windowId);
+    await Brainer.setCurrentWspDisabled(windowId, activeTabId);
 
     const wsp = await WSPStorageManger.getWorkspace(wspId);
     await wsp.activate(activeTabId);
