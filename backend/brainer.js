@@ -31,7 +31,7 @@ class Brainer {
       initialized = true;
     });
 
-    browser.windows.onCreated.addListener(async (window) => {
+    async function onWindowCreated(window) {
       // initial startup
       if (await WSPStorageManger.getPrimaryWindowId() == null && await WSPStorageManger.getPrimaryWindowLastId() == null) {
         await WSPStorageManger.setPrimaryWindowId(window.id);
@@ -109,6 +109,17 @@ class Brainer {
         }
         await Brainer.updateTabList();
         initialized = true;
+      }
+    }
+
+    browser.windows.onCreated.addListener(async (window) => {
+      await onWindowCreated(window);
+    });
+
+    browser.runtime.onStartup.addListener(async () => {
+      const windowsOnLoad = await browser.windows.getAll();
+      if (windowsOnLoad.length === 1) {
+        await onWindowCreated(windowsOnLoad[0]);
       }
     });
 
