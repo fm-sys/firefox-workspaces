@@ -389,11 +389,18 @@ class Brainer {
 
     if (movedTabIdx >= 0) {
       fromWsp.tabs.splice(movedTabIdx, 1);
+      for (const group of fromWsp.groups) {
+        const tabIdx = group.tabs.indexOf(tabId);
+        if (tabIdx >= 0) {
+          group.tabs.splice(tabIdx, 1);
+        }
+      }
       await fromWsp._saveState();
       if (fromWsp.tabs.length === 0) {
         await Brainer.destroyWsp(fromWspId);
       }
       await Brainer.activateWsp(toWspId, toWsp.windowId, tabId);
+      await browser.tabs.ungroup(tabId);
     }
 
     await this.refreshTabMenu();
