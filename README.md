@@ -8,15 +8,11 @@ This extension utilizes tab show and hide APIs so giving it a permission to keep
 
 [coming shortly]
 
-## Improvements
+## Development
 
-[x] Send a tab to another workspace by right clicking the tab and choosing which workspace to send it to.
+Testing can be done by loading the extension in Firefox via `about:debugging#/runtime/this-firefox`. 
 
-[ ] Save and load workspaces.
-
-[ ] Smoothness in hiding and show tabs between workspace switches.
-
-[ ] Support for commands/shortcuts to open and navigate through the list of workspaces.
+To build the extension, zip the `backend/`, `icons/`, `popup/` and `manifest.json` files together. The resulting zip file can be installed in Firefox via `about:addons` (disable `xpinstall.signatures.required`) or upload it as official release.
 
 ## Acknowledgements
 

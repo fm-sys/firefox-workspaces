@@ -7,6 +7,12 @@
     "48": "icons/icon48.png",
     "96": "icons/icon96.png"
   },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "workspaces@fm-sys",
+      "strict_min_version": "139.0"
+    }
+  },
   "permissions": [
     "tabs",
     "tabHide",
