@@ -144,10 +144,7 @@ class Brainer {
       if (removeInfo.isWindowClosing) {
         return;
       }
-      // wait 100ms before querying to avoid common race condition
-      setTimeout(async () => {
-        await Brainer.updateTabList();
-      }, 100);
+      await Brainer.updateTabList(tabId);
       await Brainer.removeTabFromWorkspace(removeInfo.windowId, tabId);
     });
 
@@ -188,6 +185,15 @@ class Brainer {
   static async updateTabList(excludeTabId = null) {
     try {
       const tabs = await browser.tabs.query({windowId: await WSPStorageManger.getPrimaryWindowId()});
+
+      if (excludeTabId && tabs.findIndex(tab => tab.id === excludeTabId) >= 0) {
+        // sometimes the tab is not yet removed from the list, so we wait a bit
+        setTimeout(async () => {
+          await Brainer.updateTabList(excludeTabId);
+        }, 100);
+        return;
+      }
+
       const currentTabs = tabs.map(tab => ({
         id: tab.id,
         index: tab.index,
