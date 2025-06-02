@@ -330,8 +330,7 @@ class Brainer {
 
   static async getActiveWsp(windowId) {
     const workspaces = await WSPStorageManger.getWorkspaces(windowId);
-    const activeWsp = workspaces.find(wsp => wsp.active);
-    return activeWsp;
+    return workspaces.find(wsp => wsp.active);
   }
 
   static async destroyWsp(wspId) {
@@ -378,7 +377,7 @@ class Brainer {
 
     // add movedTabId to the toWsp workspace
     toWsp.tabs.unshift(tabId);
-    toWsp._saveState();
+    await toWsp._saveState();
 
     const movedTabIdx = fromWsp.tabs.findIndex(tId => tId === tabId);
 

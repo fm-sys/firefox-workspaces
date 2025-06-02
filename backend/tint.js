@@ -54,7 +54,9 @@ async function updateThemedIcon() {
 }
 
 // Initial icon update
-updateThemedIcon();
+(async () => {
+  await updateThemedIcon();
+})();
 
 // Reapply icon when theme changes
 browser.theme.onUpdated.addListener(updateThemedIcon);

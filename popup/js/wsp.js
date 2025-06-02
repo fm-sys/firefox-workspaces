@@ -40,7 +40,9 @@ async function applyTheme() {
 }
 
 // Initial anwenden
-applyTheme();
+(async () => {
+  await applyTheme();
+})();
 
 // Auf Theme-Änderungen reagieren
 browser.theme.onUpdated.addListener(applyTheme);
@@ -240,14 +242,6 @@ class WorkspaceUI {
 
       const liParent = li.parentElement;
 
-      // if (liParent.childElementCount === 1) {
-      //   const deleteLastWspConfirmed = await showCustomDialog({ message: `Deleting the last workspace will close the window.\nDo you want to continue?` });
-      //
-      //   if (!deleteLastWspConfirmed) {
-      //     return;
-      //   }
-      // }
-
       // removing the active workspace
       li.parentNode.removeChild(li);
       if (li.classList.contains("active")) {
@@ -320,5 +314,7 @@ class WorkspaceUI {
   }
 }
 
-const wsp = new WorkspaceUI();
-wsp.initialize();
+(async () => {
+  const wsp = new WorkspaceUI();
+  await wsp.initialize();
+})();
