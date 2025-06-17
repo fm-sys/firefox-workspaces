@@ -303,13 +303,13 @@ class Brainer {
             highlighted: true
           });
 
-          const tabIdsToMove = highlightedTabs.length > 1
-            ? highlightedTabs.map(t => t.id)
-            : [tab.id]; // fallback to single right-clicked tab
+          const tabsToMove = highlightedTabs.length > 1 && highlightedTabs.some(t => t.id === tab.id)
+            ? highlightedTabs
+            : [tab]; // fallback to single right-clicked tab
 
           // Move each selected tab to the target workspace
-          for (const tabId of tabIdsToMove) {
-            await Brainer.moveTabToWsp(tabId, currentWsp.id, workspace.id);
+          for (const t of tabsToMove) {
+            await Brainer.moveTabToWsp(t, currentWsp.id, workspace.id);
           }
         }
       });
@@ -388,7 +388,8 @@ class Brainer {
     await Brainer.initializeTabMenu();
   }
 
-  static async moveTabToWsp(tabId, fromWspId, toWspId) {
+  static async moveTabToWsp(tab, fromWspId, toWspId) {
+    const tabId = tab.id;
     const fromWsp = await WSPStorageManger.getWorkspace(fromWspId);
     const toWsp = await WSPStorageManger.getWorkspace(toWspId);
 
@@ -400,6 +401,7 @@ class Brainer {
 
     if (movedTabIdx >= 0) {
       fromWsp.tabs.splice(movedTabIdx, 1);
+
       for (const group of fromWsp.groups) {
         const tabIdx = group.tabs.indexOf(tabId);
         if (tabIdx >= 0) {
@@ -407,10 +409,17 @@ class Brainer {
         }
       }
       await fromWsp._saveState();
+
       if (fromWsp.tabs.length === 0) {
         await Brainer.destroyWsp(fromWspId);
       }
-      await Brainer.activateWsp(toWspId, toWsp.windowId, tabId);
+      if (tab.active) {
+        await Brainer.activateWsp(toWspId, toWsp.windowId, tabId);
+      } else {
+        await browser.tabs.show(tabId);
+        await Brainer.hideInactiveWspTabs(toWsp.windowId);
+      }
+
       await browser.tabs.ungroup(tabId);
     }
 
