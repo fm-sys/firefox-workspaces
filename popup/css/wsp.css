@@ -253,8 +253,8 @@ form, table {
 }
 
 .custom-dialog {
-    background-color: var(--bg-popup, #fff);
-    color: var(--text-popup, #000);
+    background-color: var(--bg-popup);
+    color: var(--text-popup);
     padding: 20px;
     border-radius: 6px;
     width: 300px;
@@ -274,8 +274,8 @@ form, table {
     margin-bottom: 1em;
     border: 1px solid #ccc;
     border-radius: 4px;
-    background-color: var(--input-bg, #f5f5f5);
-    color: var(--input-text, #000);
+    background-color: var(--input-bg);
+    color: var(--input-text);
     box-sizing: border-box;
 }
 
@@ -291,10 +291,15 @@ form, table {
     border-radius: 4px;
     font-weight: 500;
     cursor: pointer;
-    background-color: var(--button-primary, #007acc);
-    color: var(--button-primary-text, #fff);
+    background-color: var(--button-primary);
+    color: var(--button-primary-text);
 }
 
 .custom-dialog-buttons button:hover {
-    background-color: var(--button-primary-hover, #0095e0);
+    background-color: var(--button-primary-hover);
+}
+
+.custom-dialog-buttons button:disabled {
+    background-color: var(--bg-toolbar-inactive);
+    color: var(--text-toolbar);
 }

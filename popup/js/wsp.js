@@ -60,6 +60,8 @@ function showCustomDialog({ message, withInput = false, defaultValue = "" }) {
     inputEl.hidden = !withInput;
     inputEl.value = defaultValue;
 
+    updateOkButtonState();
+
     backdrop.classList.add("show");
     inputEl.focus();
     inputEl.select();
@@ -79,8 +81,13 @@ function showCustomDialog({ message, withInput = false, defaultValue = "" }) {
       cleanup(false);
     }
 
+    function updateOkButtonState() {
+      okBtn.disabled = withInput && inputEl.value.trim().length === 0;
+    }
+
     okBtn.addEventListener("click", onOk);
     cancelBtn.addEventListener("click", onCancel);
+    inputEl.addEventListener("input", updateOkButtonState);
   });
 }
 
@@ -119,7 +126,16 @@ class WorkspaceUI {
     document.getElementById("createNewWsp").addEventListener("click", async (e) => {
       const windowId = (await browser.windows.getCurrent()).id;
       const wspId = Date.now();
-      const wspName = await this._callBackgroundTask("getWorkspaceName");
+
+      const inputValue = await showCustomDialog({ message: "Create workspace:", withInput: true, defaultValue: await this._callBackgroundTask("getWorkspaceName") });
+      if (inputValue === false) {
+        return; // User cancelled the dialog
+      }
+
+      const wspName = inputValue.trim();
+      if (wspName.length === 0) {
+        return;
+      }
 
       const wsp = {
         id: wspId,
