@@ -6,7 +6,11 @@ This extension utilizes tab show and hide APIs so giving it a permission to keep
 
 ## Screenshots
 
-[coming shortly]
+
+| ![screenshot](/screenshots/screenshot1.png) | ![screenshot](/screenshots/screenshot2.png) | ![screenshot](/screenshots/screenshot3.png) | ![screenshot](/screenshots/screenshot4.png)      | ![screenshot](/screenshots/screenshot5.png) |
+|---------------------------------------------|---------------------------------------------|---------------------------------------------|--------------------------------------------------|---------------------------------------------|
+| Create and manage workspaces                | Name your workspaces as you want            | The add-on will adapt to the browser theme  | You may create tab groups while using the add-on | Move tabs to a different workspace          |
+
 
 ## Development
 
