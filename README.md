@@ -16,7 +16,7 @@ This extension utilizes tab show and hide APIs so giving it a permission to keep
 
 Testing can be done by loading the extension in Firefox via `about:debugging#/runtime/this-firefox`. 
 
-To build the extension, zip the `backend/`, `icons/`, `popup/` and `manifest.json` files together. The resulting zip file can be installed in Firefox via `about:addons` (disable `xpinstall.signatures.required`) or upload it as official release.
+To build the extension, increase version code and zip the `backend/`, `icons/`, `popup/` and `manifest.json` files together. The resulting zip file can be installed in Firefox via `about:addons` (disable `xpinstall.signatures.required`) or upload it as official release.
 
 ## Acknowledgements
 
