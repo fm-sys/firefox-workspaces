@@ -47,7 +47,9 @@ class Workspace {
       }
 
       await browser.tabs.show(this.tabs);
-      await browser.tabs.update(activeTabId || this.lastActiveTabId || this.tabs[0], {active: true});
+
+      const tabIdToActivate = activeTabId || this.lastActiveTabId;
+      await browser.tabs.update(this.tabs.includes(tabIdToActivate) ? tabIdToActivate : this.tabs[0], {active: true});
     }
 
     this.active = true;
