@@ -49,7 +49,8 @@ class Workspace {
       await browser.tabs.show(this.tabs);
 
       const tabIdToActivate = activeTabId || this.lastActiveTabId;
-      await browser.tabs.update(this.tabs.includes(tabIdToActivate) ? tabIdToActivate : this.tabs[0], {active: true});
+      const isValid = this.tabs.includes(tabIdToActivate) || (await browser.tabs.query({pinned: true})).map(tab => tab.id).includes(tabIdToActivate);
+      await browser.tabs.update(isValid ? tabIdToActivate : this.tabs[0], {active: true});
     }
 
     this.active = true;
