@@ -70,6 +70,8 @@ function showCustomDialog({ message, withInput = false, defaultValue = "" }) {
       backdrop.classList.remove("show");
       okBtn.removeEventListener("click", onOk);
       cancelBtn.removeEventListener("click", onCancel);
+      inputEl.removeEventListener("input", updateOkButtonState);
+      inputEl.removeEventListener("keydown", onKeyDown);
       resolve(result);
     }
 
@@ -85,11 +87,22 @@ function showCustomDialog({ message, withInput = false, defaultValue = "" }) {
       okBtn.disabled = withInput && inputEl.value.trim().length === 0;
     }
 
+    function onKeyDown(e) {
+      if (e.key === "Enter" && !okBtn.disabled) {
+        onOk();
+      }
+    }
+
     okBtn.addEventListener("click", onOk);
     cancelBtn.addEventListener("click", onCancel);
     inputEl.addEventListener("input", updateOkButtonState);
+
+    if (withInput) {
+      inputEl.addEventListener("keydown", onKeyDown);
+    }
   });
 }
+
 
 
 
