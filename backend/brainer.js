@@ -159,6 +159,25 @@ class Brainer {
       await Brainer.removeTabFromWorkspace(removeInfo.windowId, tabId);
     });
 
+    browser.tabs.onActivated.addListener(async (activeInfo) => {
+      const workspaces = await WSPStorageManger.getWorkspaces(activeInfo.windowId);
+      const activeWsp = workspaces.find(wsp => wsp.active);
+
+      if (!activeWsp || activeWsp.tabs.includes(activeInfo.tabId)) {
+        return;
+      }
+
+      for (const workspace of workspaces) {
+        if (workspace.tabs.includes(activeInfo.tabId)) {
+          console.log("Activated tab is not in the active workspace, activating workspace", workspace.name);
+          await Brainer.activateWsp(workspace.id, activeInfo.windowId, activeInfo.tabId);
+          return;
+        }
+      }
+
+
+    });
+
     browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       if (await WSPStorageManger.getPrimaryWindowId() !== tab.windowId) {
         return;
@@ -253,13 +272,6 @@ class Brainer {
         }
       }
       await activeWsp._saveState();
-      if (activeWsp.tabs.length === 0) {
-        await Brainer.destroyWsp(activeWsp.id);
-        const nextWspId = await WSPStorageManger.getNextWspId(activeWsp.windowId);
-        if (nextWspId) {
-          await Brainer.activateWsp(nextWspId, activeWsp.windowId);
-        }
-      }
       await this.refreshTabMenu();
     }
   }
@@ -342,7 +354,11 @@ class Brainer {
 
   static async hideInactiveWspTabs(windowId) {
     const workspaces = await WSPStorageManger.getWorkspaces(windowId);
-    await Promise.all(workspaces.filter(wsp => !wsp.active).map(wsp => wsp.hideTabs()));
+    for (const wsp of workspaces) {
+      if (!wsp.active) {
+        await wsp.hideTabs();
+      }
+    }
   }
 
   static async getActiveWsp(windowId) {
@@ -356,22 +372,19 @@ class Brainer {
     await this.refreshTabMenu();
   }
 
-  static async setCurrentWspDisabled(windowId, newActiveTabId = null) {
+  static async setCurrentWspDisabled(windowId) {
     const activeWsp = await Brainer.getActiveWsp(windowId);
 
     if (activeWsp) {
       activeWsp.active = false;
       activeWsp.lastActiveTabId = (await browser.tabs.query({active: true, currentWindow: true}))[0]?.id || null;
-      if (activeWsp.lastActiveTabId === newActiveTabId) {
-        activeWsp.lastActiveTabId = null;
-      }
       await activeWsp._saveState();
     }
   }
 
   static async activateWsp(wspId, windowId, activeTabId = null) {
     // make other workspaces inactive first
-    await Brainer.setCurrentWspDisabled(windowId, activeTabId);
+    await Brainer.setCurrentWspDisabled(windowId);
 
     const wsp = await WSPStorageManger.getWorkspace(wspId);
     await wsp.activate(activeTabId);
