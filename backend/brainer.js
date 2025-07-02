@@ -373,9 +373,20 @@ class Brainer {
   }
 
   static async setCurrentWspDisabled(windowId) {
-    const activeWsp = await Brainer.getActiveWsp(windowId);
+    const workspaces = await WSPStorageManger.getWorkspaces(windowId);
+    const activeWsp = workspaces.find(wsp => wsp.active);
 
     if (activeWsp) {
+      // check if there are currently visible tabs which do not belong to any workspace. If yes, add them to the active workspace.
+      const currentTabs = await browser.tabs.query({windowId, pinned: false});
+      const currentTabIds = currentTabs.map(tab => tab.id);
+      const tabsToAdd = currentTabIds.filter(tabId => workspaces.every(wsp => !wsp.tabs.includes(tabId)));
+      if (tabsToAdd.length > 0) {
+        console.log(`Adding ${tabsToAdd.length} untracked tabs to the active workspace`);
+        activeWsp.tabs.unshift(...tabsToAdd);
+        await activeWsp.updateTabGroups();
+      }
+
       activeWsp.active = false;
       activeWsp.lastActiveTabId = (await browser.tabs.query({active: true, currentWindow: true}))[0]?.id || null;
       await activeWsp._saveState();
